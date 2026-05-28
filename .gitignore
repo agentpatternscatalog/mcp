@@ -1,0 +1,16 @@
+# Python build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+build/
+dist/
+
+# Bundled catalog data populated by scripts/bundle_catalog.py at release time.
+# Not tracked because the source of truth is the sibling catalog repo.
+src/mcp_agentic_patterns/data/
