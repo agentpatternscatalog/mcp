@@ -86,3 +86,38 @@ def test_pattern_for_symptom_returns_anti_patterns():
     hits = _call(server, "pattern_for_symptom", symptom="agent loops forever")
     assert isinstance(hits, list) and len(hits) > 0
     assert "anti_pattern" in hits[0]
+
+
+def test_catalog_info_summary():
+    server = build_server(catalog_dir=os.environ.get("CATALOG_DIR"))
+    info = _call(server, "catalog_info")
+    assert info["patterns"] > 100
+    assert info["methodologies"] > 5
+    assert info["glossary_terms"] > 10
+    assert "memory" in info["categories"]
+
+
+def test_list_categories():
+    server = build_server(catalog_dir=os.environ.get("CATALOG_DIR"))
+    cats = _call(server, "list_categories")
+    assert isinstance(cats, list) and len(cats) >= 10
+    assert all("id" in c and "pattern_count" in c for c in cats)
+
+
+def test_glossary_term_lookup():
+    server = build_server(catalog_dir=os.environ.get("CATALOG_DIR"))
+    # Try by id, by term, by expansion — all three should resolve to same entry.
+    for query in ("llm", "LLM", "Large Language Model"):
+        entry = _call(server, "glossary_term", term=query)
+        assert entry.get("id") == "llm", f"failed lookup for {query!r}: {entry}"
+
+
+def test_list_trainings_and_search():
+    server = build_server(catalog_dir=os.environ.get("CATALOG_DIR"))
+    trainings = _call(server, "list_trainings")
+    assert isinstance(trainings, list) and len(trainings) > 0
+    hits = _call(server, "search_text", query="memory consolidation")
+    assert isinstance(hits, list)
+    # search_text returns multiple kinds; each result has a 'kind' field.
+    if hits:
+        assert "kind" in hits[0] and "id" in hits[0]

@@ -4,4 +4,4 @@ Exposes patterns, recipes, frameworks, methodologies, anti-patterns, and example
 as MCP resources and tools so AI coding agents can query the catalog natively.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

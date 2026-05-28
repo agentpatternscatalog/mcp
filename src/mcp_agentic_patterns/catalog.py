@@ -56,6 +56,7 @@ class Catalog:
     compositions: dict[str, dict[str, Any]] = field(default_factory=dict)
     methodologies: dict[str, dict[str, Any]] = field(default_factory=dict)
     training: dict[str, dict[str, Any]] = field(default_factory=dict)
+    glossary: dict[str, dict[str, Any]] = field(default_factory=dict)  # keyed by lowercased term + by id
     examples_by_pattern: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
 
     # Reverse indexes — built once at startup, used by every tool call.
@@ -95,6 +96,20 @@ class Catalog:
                     self.examples_by_pattern.setdefault(entry["pattern_id"], []).extend(
                         entry.get("examples", [])
                     )
+        # Glossary lives at the catalog root (single file, not sharded).
+        # Each term is indexed under BOTH its id ("llm") and its lowercased term
+        # ("llm" / "large language model") so callers can look up by either.
+        glossary_file = self.root / "glossary.json"
+        if glossary_file.exists():
+            for entry in json.loads(glossary_file.read_text()).get("terms", []):
+                self.glossary[entry["id"]] = entry
+                term_key = entry["term"].lower()
+                if term_key not in self.glossary:
+                    self.glossary[term_key] = entry
+                # Also index by expansion if present and distinct
+                exp = entry.get("expansion")
+                if exp and exp.lower() not in self.glossary:
+                    self.glossary[exp.lower()] = entry
 
     # ----- reverse index --------------------------------------------------
 
